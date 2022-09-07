@@ -5,10 +5,12 @@ using UnityEngine;
 public class Square {
     public List<Tile> possibleTiles;
     public Tile selectedTile = null;
+    public float shannonEntropy = 0;
     public bool hasCollapsed {get; private set;} = false;
 
     public Square(List<Tile> _possibleTiles) {
         possibleTiles = _possibleTiles;
+        shannonEntropy = GetShannonEntropy();
     }
 
     public void Collapse() {
@@ -16,7 +18,7 @@ public class Square {
         hasCollapsed = true;
     }
 
-    public float GetShannonEntropy() {
+    float GetShannonEntropy() {
         float weightSum = 0;
         foreach (Tile tile in possibleTiles) {
             weightSum += tile.weight;
@@ -27,18 +29,17 @@ public class Square {
 }
 
 public class WaveFunctionCollapse {
+    
     public static Sprite GenerateFromImage(Texture2D _example, Vector2Int _size) {
         List<Tile> tiles = Tile.GetTiles(_example);
         
-        GeneratePixelMap(tiles, _size);
-        
-        //convert pixel map to sprite
-
-        //return sprite
-        return null;
+        return PixelMap.CreateSprite(GeneratePixelMap(tiles, _size), _size);
     }
 
     static Dictionary<Vector2Int, Color> GeneratePixelMap(List<Tile> _tiles, Vector2Int _size) {
+        int i = 0;
+        float currentTime = Time.realtimeSinceStartup;
+        
         Dictionary<Vector2Int, Square> squares = new Dictionary<Vector2Int, Square>();
         for (int x = 0; x < _size.x; x++) {
             for (int y = 0; y < _size.y; y++) {
@@ -47,23 +48,43 @@ public class WaveFunctionCollapse {
         }
 
         while(!IsFullyCollapsed(squares)) {
-            squares[GetSquareWithLowestEntropy(squares)].Collapse();
+            squares[GetSquareWithLowestEntropy(squares, _size)].Collapse();
             
             //update neighbour's possible tiles;
+
+            i++;
         }
 
-        return null;
+        Dictionary<Vector2Int, Color> dictToReturn = new Dictionary<Vector2Int, Color>();
+        foreach (var square in squares) {
+            dictToReturn.Add(square.Key, square.Value.selectedTile.color);
+        }
+
+        Debug.Log("Iterations: " + i);
+        Debug.Log("Execution Time: " + RoundToDigit.Round(Time.realtimeSinceStartup - currentTime, 4) + " seconds");
+
+        return dictToReturn;
     }   
 
-    static Vector2Int GetSquareWithLowestEntropy(Dictionary<Vector2Int, Square> _squareDict) {
+    //TODO: somehow it still has a chance of outputting a square that has already been collapsed??
+    static Vector2Int GetSquareWithLowestEntropy(Dictionary<Vector2Int, Square> _squareDict, Vector2Int _size) {
         KeyValuePair<Vector2Int, Square> lowestSquare = new KeyValuePair<Vector2Int, Square>();
-        foreach (var square in _squareDict) {
-            if (square.Value.GetShannonEntropy() < lowestSquare.Value.GetShannonEntropy()) {
-                lowestSquare = square;
+        
+        Vector2Int squarePos = new Vector2Int(Random.Range(0, _size.x), Random.Range(0, _size.y));
+        
+        if (lowestSquare.Value != null) {
+            foreach (var square in _squareDict) {
+            if (!square.Value.hasCollapsed || square.Value.selectedTile == null) continue; //why doesnt this work? (the OR should be overkill)
+            
+            if (square.Value.shannonEntropy < lowestSquare.Value.shannonEntropy) {
+                    lowestSquare = square;
+                    squarePos = square.Key;
+                }
             }
         }
+        
 
-        return lowestSquare.Key;
+        return squarePos;
     }
 
     static bool IsFullyCollapsed(Dictionary<Vector2Int, Square> _squareDict) {

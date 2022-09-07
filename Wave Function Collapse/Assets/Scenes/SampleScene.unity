@@ -252,7 +252,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   exampleImage: {fileID: 2800000, guid: 8216f6b6f05eee24898c467aceb1254f, type: 3}
-  renderer: {fileID: 1821016862}
+  spriteRenderer: {fileID: 1821016862}
+  renderSize: {x: 16, y: 16}
 --- !u!1 &1821016861
 GameObject:
   m_ObjectHideFlags: 0

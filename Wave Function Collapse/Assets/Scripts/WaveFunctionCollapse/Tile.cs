@@ -9,7 +9,7 @@ public class Tile {
 
     public static List<Tile> GetTiles(Texture2D _exampleImage) {
         //get pixel map
-        Dictionary<Vector2Int, Color> examplePixelMap = GetPixelMap(_exampleImage);
+        Dictionary<Vector2Int, Color> examplePixelMap = PixelMap.GetPixelMap(_exampleImage);
         
         List<Color> colors = new List<Color>();
         List<Tile> tilesToReturn = new List<Tile>();
@@ -23,17 +23,6 @@ public class Tile {
         }
 
         return tilesToReturn;
-    }
-
-    public static Dictionary<Vector2Int, Color> GetPixelMap(Texture2D _image) {
-        Dictionary<Vector2Int, Color> dict = new Dictionary<Vector2Int, Color>();
-        for (int x = 0; x < _image.width; x++) {
-            for (int y = 0; y < _image.height; y++) {
-                dict.Add(new Vector2Int(x, y), _image.GetPixel(x, y));
-            }
-        }
-
-        return dict;
     }
 
     public static Tile SelectTile(List<Tile> _tiles) {
