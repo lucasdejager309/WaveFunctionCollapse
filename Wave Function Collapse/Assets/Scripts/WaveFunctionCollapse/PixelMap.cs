@@ -32,4 +32,23 @@ public class PixelMap
 
         return dict;
     }
+
+    public static void DebugPixelMap(Dictionary<Vector2Int, Color> map) {
+        Dictionary<Color, int> colorAmounts = new Dictionary<Color, int>();
+        foreach (var pixel in map) {
+            if (!colorAmounts.ContainsKey(pixel.Value)) {
+                colorAmounts.Add(pixel.Value, 1);
+            } else {
+                colorAmounts[pixel.Value]++;
+            }
+        }
+
+        string message = "";
+
+        foreach(var color in colorAmounts) {
+            message += "[R: " + 255*color.Key.r + " G: " + 255*color.Key.g + " B:" + 255*color.Key.b + "] " + (float)color.Value/map.Count + "\n";
+        }
+
+        Debug.Log(message);
+    }
 }

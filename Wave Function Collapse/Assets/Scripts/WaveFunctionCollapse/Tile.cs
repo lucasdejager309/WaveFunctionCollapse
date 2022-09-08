@@ -30,26 +30,36 @@ public class Tile {
         float probabilitySum = 0;
         
         //get sum of probabilities
-        foreach(Tile currentObject in _tiles) {
-            probabilitySum += currentObject.weight;
+        foreach(Tile currentTile in _tiles) {
+            probabilitySum += currentTile.weight;
         }
 
         //generate random number
         float randomFloat = Random.Range(0, probabilitySum+1);
 
 
-        foreach(Tile currentObject in _tiles) {
+        foreach(Tile currentTile in _tiles) {
             if (randomFloat > 0) {
-                randomFloat -= currentObject.weight;
-                pickedTile = currentObject;
+                randomFloat -= currentTile.weight;
+                pickedTile = currentTile;
             } else break;
         }
 
+        Debug.Log(_tiles.Count);
+
         if (pickedTile == null) {
-            pickedTile = _tiles[_tiles.Count-1];
+            pickedTile = _tiles[0];
         }
      
         return pickedTile;
+    }
+
+    public static Tile GetTileFromList(Color _color, List<Tile> _list) {
+        foreach (Tile tile in _list) {
+            if (tile.color == _color) return tile;
+        }
+
+        return null;
     }
 
     public Tile(Color _color, Dictionary<Vector2Int, Color> _examplePixelMap) {

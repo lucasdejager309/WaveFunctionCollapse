@@ -2,33 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Square {
-    public List<Tile> possibleTiles;
-    public Tile selectedTile = null;
-    public float shannonEntropy = 0;
-    public bool hasCollapsed {get; private set;} = false;
-
-    public Square(List<Tile> _possibleTiles) {
-        possibleTiles = _possibleTiles;
-        shannonEntropy = GetShannonEntropy();
-    }
-
-    public void Collapse() {
-        selectedTile = Tile.SelectTile(possibleTiles);
-        hasCollapsed = true;
-    }
-
-    float GetShannonEntropy() {
-        float weightSum = 0;
-        foreach (Tile tile in possibleTiles) {
-            weightSum += tile.weight;
-        }
-
-        return (Mathf.Log(weightSum) - (Mathf.Log(weightSum) / weightSum));
-    }
-}
-
 public class WaveFunctionCollapse {
+
+    static int i = 0;
     
     public static Sprite GenerateFromImage(Texture2D _example, Vector2Int _size) {
         List<Tile> tiles = Tile.GetTiles(_example);
@@ -37,7 +13,6 @@ public class WaveFunctionCollapse {
     }
 
     static Dictionary<Vector2Int, Color> GeneratePixelMap(List<Tile> _tiles, Vector2Int _size) {
-        int i = 0;
         float currentTime = Time.realtimeSinceStartup;
         
         Dictionary<Vector2Int, Square> squares = new Dictionary<Vector2Int, Square>();
@@ -48,9 +23,13 @@ public class WaveFunctionCollapse {
         }
 
         while(!IsFullyCollapsed(squares)) {
-            squares[GetSquareWithLowestEntropy(squares, _size)].Collapse();
+            Vector2Int squarePos = Square.GetSquareWithLowestEntropy(squares, _size, i);
+            Color color = squares[squarePos].Collapse();
             
-            //update neighbour's possible tiles;
+            Debug.Log(GetNeighbours(squarePos, _size).Count);
+            foreach (Vector2Int neighbour in GetNeighbours(squarePos, _size)) {
+                squares[squarePos].UpdatePossibleTiles(color, neighbour-squarePos);
+            }
 
             i++;
         }
@@ -66,31 +45,35 @@ public class WaveFunctionCollapse {
         return dictToReturn;
     }   
 
-    //TODO: somehow it still has a chance of outputting a square that has already been collapsed??
-    static Vector2Int GetSquareWithLowestEntropy(Dictionary<Vector2Int, Square> _squareDict, Vector2Int _size) {
-        KeyValuePair<Vector2Int, Square> lowestSquare = new KeyValuePair<Vector2Int, Square>();
-        
-        Vector2Int squarePos = new Vector2Int(Random.Range(0, _size.x), Random.Range(0, _size.y));
-        
-        if (lowestSquare.Value != null) {
-            foreach (var square in _squareDict) {
-            if (!square.Value.hasCollapsed || square.Value.selectedTile == null) continue; //why doesnt this work? (the OR should be overkill)
-            
-            if (square.Value.shannonEntropy < lowestSquare.Value.shannonEntropy) {
-                    lowestSquare = square;
-                    squarePos = square.Key;
-                }
-            }
-        }
-        
-
-        return squarePos;
-    }
-
     static bool IsFullyCollapsed(Dictionary<Vector2Int, Square> _squareDict) {
         foreach (var square in _squareDict) {
             if (!square.Value.hasCollapsed) return false;
         }
         return true;
     } 
+
+    //idk of deze goed werkt
+    static List<Vector2Int> GetNeighbours(Vector2Int _pos, Vector2Int _size) {
+        List<Vector2Int> directions = new List<Vector2Int>() {
+            {new Vector2Int(-1, 1)}, //UR
+            {new Vector2Int(0, 1)}, //R
+            {new Vector2Int(1, 1)}, //DR
+            {new Vector2Int(1, -1)}, //UL
+            {new Vector2Int(0, -1)}, //L
+            {new Vector2Int(-1, -1)}, //DL
+            {new Vector2Int(1, 0)}, //U
+            {new Vector2Int(-1, 0)}, //D
+        };
+
+        List<Vector2Int> neighbours = new List<Vector2Int>();
+        
+        for (int i = 0; i < directions.Count; i++) {
+            Vector2Int neighbourPos = _pos+directions[i];
+            if ((neighbourPos.x > _size.x || neighbourPos.x < 0) || (neighbourPos.y > _size.y || neighbourPos.y < 0)) {
+                neighbours.Add(neighbourPos);
+            }
+        }
+
+        return neighbours;
+    }
 }
