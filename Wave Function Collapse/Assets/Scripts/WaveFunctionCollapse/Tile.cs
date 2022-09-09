@@ -45,9 +45,7 @@ public class Tile {
             } else break;
         }
 
-        Debug.Log(_tiles.Count);
-
-        if (pickedTile == null) {
+        if (pickedTile == null && _tiles.Count > 0) {
             pickedTile = _tiles[0];
         }
      
@@ -74,19 +72,16 @@ public class Tile {
         SetAllowedNeighbours(color, _examplePixelMap);
     }
 
-    void SetAllowedNeighbours(Color color, Dictionary<Vector2Int, Color> _examplePixelMap) {
-        List<Vector2Int> directions = new List<Vector2Int> {
-            {new Vector2Int(1, 0)}, //right
-            {new Vector2Int(-1, 0)}, //left
-            {new Vector2Int(0, 1)}, //bottom
-            {new Vector2Int(0, -1)} //top
-        };
-        
+    public Tile(Color _color) {
+        color = _color;
+    }
+
+    void SetAllowedNeighbours(Color color, Dictionary<Vector2Int, Color> _examplePixelMap) {      
         foreach (var pixel in _examplePixelMap) {
             if (pixel.Value == color) {
                 //get neighbours
                 Dictionary<Vector2Int, Color> neighbours = new Dictionary<Vector2Int, Color>();
-                foreach (Vector2Int direction in directions) {
+                foreach (Vector2Int direction in Directions.directions) {
                     if (_examplePixelMap.ContainsKey(pixel.Key+direction)) neighbours.Add(direction, _examplePixelMap[pixel.Key+direction]);
                 }
 

@@ -6,26 +6,37 @@ public class Square {
     public List<Tile> possibleTiles;
     public Tile selectedTile = null;
     public float shannonEntropy = 0;
-    public bool hasCollapsed {get; private set;} = false;
 
     public Square(List<Tile> _possibleTiles) {
         possibleTiles = _possibleTiles;
         shannonEntropy = GetShannonEntropy();
     }
 
-    public Square() {
-    }
+    public Square() {}
 
     public Color Collapse() {
         Tile tile = Tile.SelectTile(possibleTiles);
         selectedTile = tile;
-        hasCollapsed = true;
 
         return tile.color;
     }
 
-    public void UpdatePossibleTiles(Color _color, Vector2Int _relativePos) {
-        //do stuff
+    public void UpdatePossibleTiles(Color _color, Vector2Int _pos) {
+        List<Tile> tilesToRemove = new List<Tile>();
+        foreach (Tile tile in possibleTiles) {
+            if (!tile.allowedNeighbours.ContainsKey(_color)) {
+                tilesToRemove.Add(tile);
+            } else {
+                if (!tile.allowedNeighbours[_color].Contains(-_pos)) {
+                    tilesToRemove.Add(tile);
+                }
+            }
+        }
+
+        foreach (Tile tile in tilesToRemove) {
+            possibleTiles.Remove(tile);
+        }
+        if (tilesToRemove.Count > 0) GetShannonEntropy();
     }
 
     public static Vector2Int GetSquareWithLowestEntropy(Dictionary<Vector2Int, Square> _squareDict, Vector2Int _size, int i) {
@@ -34,8 +45,8 @@ public class Square {
         if (i == 0) return lowestSquare.Key;
 
         foreach (var square in _squareDict) {
-            if (!square.Value.hasCollapsed) {
-                if (square.Value.shannonEntropy <= lowestSquare.Value.shannonEntropy) {
+            if (square.Value.selectedTile == null) {
+                if (square.Value.shannonEntropy < lowestSquare.Value.shannonEntropy) {
                     lowestSquare = square;
                 }
             }
@@ -49,6 +60,7 @@ public class Square {
         foreach (Tile tile in possibleTiles) {
             weightSum += tile.weight;
         }
+        weightSum*=10;
 
         return (Mathf.Log(weightSum) - (Mathf.Log(weightSum) / weightSum));
     }
